@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.markDev.backend_biblioteca_springboot.dto.LivroDTO;
 import com.markDev.backend_biblioteca_springboot.service.LivroService;
 
+import io.swagger.v3.oas.annotations.Operation;
+
 @RestController
 @RequestMapping(value = "/livro")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -27,11 +29,13 @@ public class LivroController {
 	@Autowired
 	private LivroService livroService;
 	
+	@Operation(summary = "Lista todos os livros da estante")
 	@GetMapping
 	public List<LivroDTO> listarTodos(){
 		return livroService.listarTodos();
 	}
 	
+	@Operation(summary = "Insere um novo livro na estante")
 	@PostMapping
 	public ResponseEntity<Void> inserir(@RequestBody LivroDTO livro) {
 	    System.out.println("Recebendo livro: " + livro.getTitulo() + " | Capa: " + 
@@ -40,6 +44,7 @@ public class LivroController {
 	    return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 	
+	@Operation(summary = "Altera um livro existente")
 	@PutMapping("/{id}")
 	public ResponseEntity<LivroDTO> alterar(@PathVariable Long id, @RequestBody LivroDTO livro) {
 	    livro.setId(id); // Garantir que o ID está correto
@@ -48,8 +53,7 @@ public class LivroController {
 	    
 	}
 
-	
-	//http://endereco/usuario/3
+	@Operation(summary = "Exclui um livro da estante")
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> excluir(@PathVariable("id") Long id){
 		livroService.excluir(id);
