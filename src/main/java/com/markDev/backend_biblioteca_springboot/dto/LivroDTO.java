@@ -1,9 +1,6 @@
 package com.markDev.backend_biblioteca_springboot.dto;
 
-import org.springframework.beans.BeanUtils;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.markDev.backend_biblioteca_springboot.entity.LivroEntity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
@@ -30,15 +27,17 @@ public class LivroDTO {
 	private String sinopse;
 	@Schema(description = "Numero de paginas", example = "1232")
 	private Integer numeroPaginas;
-	
+	private boolean lido;
+	private boolean emprestado;
+    private String emprestadoPara;
 	private byte[] capa;
-	@JsonIgnore 
+	@JsonIgnore
 	private byte[] contraCapa;
-	
+
 //	public LivroDTO (LivroEntity livro) {
 //		
 //		BeanUtils.copyProperties(livro, this);
 //		
 //	}
-	
+
 }

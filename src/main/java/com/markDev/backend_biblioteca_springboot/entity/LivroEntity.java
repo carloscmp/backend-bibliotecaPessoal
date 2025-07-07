@@ -33,16 +33,20 @@ public class LivroEntity {
 	private Integer ano;
 	@Column(length = 2000, nullable = true)
 	private String sinopse;
+	@Column(name = "lido", nullable = false)
+	private boolean lido;
+	private boolean emprestado;
+	private String emprestadoPara;
 	@Column(nullable = true)
 	private Integer numeroPaginas;
 	@Lob
 	private byte[] capa;
 	@Lob
 	private byte[] contraCapa;
-	
-public LivroEntity (LivroDTO livro) {
-		
+
+	public LivroEntity(LivroDTO livro) {
+
 		BeanUtils.copyProperties(livro, this);
-		
+
 	}
 }
