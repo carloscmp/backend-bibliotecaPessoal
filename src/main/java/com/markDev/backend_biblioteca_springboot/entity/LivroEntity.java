@@ -1,9 +1,5 @@
 package com.markDev.backend_biblioteca_springboot.entity;
 
-import org.springframework.beans.BeanUtils;
-
-import com.markDev.backend_biblioteca_springboot.dto.LivroDTO;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,35 +14,46 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor // O construtor sem argumentos do Lombok é suficiente
 @Table(name = "MK_LIVRO")
 public class LivroEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-	@Column(nullable = false)
-	private String titulo;
-	@Column(nullable = false)
-	private String autor;
-	@Column(nullable = true)
-	private Integer ano;
-	@Column(length = 2000, nullable = true)
-	private String sinopse;
-	@Column(name = "lido", nullable = false)
-	private boolean lido;
-	private boolean emprestado;
-	private String emprestadoPara;
-	@Column(nullable = true)
-	private Integer numeroPaginas;
-	@Lob
-	private byte[] capa;
-	@Lob
-	private byte[] contraCapa;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	public LivroEntity(LivroDTO livro) {
+    @Column(nullable = false)
+    private String titulo;
 
-		BeanUtils.copyProperties(livro, this);
+    @Column(nullable = false)
+    private String autor;
 
-	}
+    @Column(nullable = true)
+    private Integer ano;
+
+    @Column(length = 2000, nullable = true)
+    private String sinopse;
+
+    @Column(nullable = false)
+    private boolean lido = false; // Boa prática: inicializar com um valor padrão
+
+    @Column(nullable = false)
+    private boolean emprestado = false; // Boa prática: inicializar
+
+    @Column(nullable = true)
+    private String emprestadoPara;
+
+    @Column(nullable = true)
+    private Integer numeroPaginas;
+
+    @Lob
+    @Column(columnDefinition="LONGBLOB") // Boa prática para blobs
+    private byte[] capa;
+
+    @Lob
+    @Column(columnDefinition="LONGBLOB") // Boa prática para blobs
+    private byte[] contraCapa;
+
+    // O construtor que recebia LivroDTO foi REMOVIDO.
+    // A conversão será feita na camada de serviço.
 }

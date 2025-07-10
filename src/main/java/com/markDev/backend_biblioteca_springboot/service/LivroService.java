@@ -1,58 +1,98 @@
 package com.markDev.backend_biblioteca_springboot.service;
 
-import java.util.List;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import com.markDev.backend_biblioteca_springboot.dto.LivroDTO;
 import com.markDev.backend_biblioteca_springboot.entity.LivroEntity;
 import com.markDev.backend_biblioteca_springboot.exception.RecursoNaoEncontradoException;
 import com.markDev.backend_biblioteca_springboot.repository.LivroRepository;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class LivroService {
 
-	@Autowired
-	private LivroRepository livroRepository;
+    @Autowired
+    private LivroRepository livroRepository;
 
-	public List<LivroDTO> listarTodos() {
-		List<LivroEntity> livros = livroRepository.findAll();
-		// --- ESTA É A PARTE CORRIGIDA ---
-		// Em vez de .map(LivroDTO::new), fazemos a conversão aqui.
-		return livros.stream().map(entidade -> {
-			LivroDTO dto = new LivroDTO();
-			BeanUtils.copyProperties(entidade, dto); // Copia os dados da entidade para o DTO
-			return dto;
-		}).toList();
-	}
+    /**
+     * Lista todos os livros e os converte para DTOs.
+     */
+    @Transactional(readOnly = true)
+    public List<LivroDTO> listarTodos() {
+        List<LivroEntity> livros = livroRepository.findAll();
+        // Mapeia cada entidade para um DTO de forma explícita
+        return livros.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
 
-	public void inserir(LivroDTO livro) {
-		LivroEntity livroEntity = new LivroEntity(livro);
-		livroRepository.save(livroEntity);
-	}
+    /**
+     * Insere um novo livro no banco de dados.
+     * @param livroDTO Os dados do novo livro vindos do frontend.
+     * @return A Entidade do livro que foi salva, contendo o novo ID gerado.
+     */
+    @Transactional
+    public LivroEntity inserir(LivroDTO livroDTO) {
+        LivroEntity livroEntity = new LivroEntity();
+        // Converte o DTO recebido em uma nova Entidade
+        BeanUtils.copyProperties(livroDTO, livroEntity);
+        // Salva a nova entidade e a retorna
+        return livroRepository.save(livroEntity);
+    }
 
-	public LivroDTO alterar(LivroDTO livro) {
-		LivroEntity livroEntity = new LivroEntity(livro);
-		// Também corrigindo aqui para retornar um DTO da forma segura
-		LivroEntity entidadeSalva = livroRepository.save(livroEntity);
-		LivroDTO dtoDeRetorno = new LivroDTO();
-		BeanUtils.copyProperties(entidadeSalva, dtoDeRetorno);
-		return dtoDeRetorno;
-	}
+    /**
+     * Altera um livro existente no banco de dados.
+     * @param id O ID do livro a ser alterado.
+     * @param livroDTO Os novos dados para o livro.
+     * @return A Entidade do livro que foi atualizada.
+     */
+    @Transactional
+    public LivroEntity alterar(Long id, LivroDTO livroDTO) {
+        // Busca o livro existente no banco de dados
+        LivroEntity livroEntity = livroRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Livro com ID " + id + " não encontrado para alteração."));
 
-	public void excluir(Long id) {
-		LivroEntity livro = livroRepository.findById(id)
-				.orElseThrow(() -> new RecursoNaoEncontradoException("Livro com ID " + id + " não encontrado."));
-		livroRepository.delete(livro);
-	}
+        // Copia as propriedades do DTO para a entidade encontrada, ignorando o ID
+        BeanUtils.copyProperties(livroDTO, livroEntity, "id");
+        
+        // Salva a entidade atualizada e a retorna
+        return livroRepository.save(livroEntity);
+    }
 
-	public List<LivroDTO> buscarPorTitulo(String titulo) {
-		List<LivroEntity> livros = livroRepository.findByTituloContainingIgnoreCase(titulo);
-		// --- E CORRIGINDO AQUI TAMBÉM ---
-		return livros.stream().map(entidade -> {
-			LivroDTO dto = new LivroDTO();
-			BeanUtils.copyProperties(entidade, dto);
-			return dto;
-		}).toList();
-	}
+    /**
+     * Exclui um livro do banco de dados pelo seu ID.
+     */
+    @Transactional
+    public void excluir(Long id) {
+        // Verifica se o livro existe antes de tentar deletar
+        if (!livroRepository.existsById(id)) {
+            throw new RecursoNaoEncontradoException("Livro com ID " + id + " não encontrado para exclusão.");
+        }
+        livroRepository.deleteById(id);
+    }
+
+    /**
+     * Busca livros por título e os converte para DTOs.
+     */
+    @Transactional(readOnly = true)
+    public List<LivroDTO> buscarPorTitulo(String titulo) {
+        List<LivroEntity> livros = livroRepository.findByTituloContainingIgnoreCase(titulo);
+        return livros.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Método auxiliar privado para converter uma Entidade em um DTO.
+     * Centraliza a lógica de conversão.
+     */
+    private LivroDTO toDTO(LivroEntity entidade) {
+        LivroDTO dto = new LivroDTO();
+        BeanUtils.copyProperties(entidade, dto);
+        return dto;
+    }
 }
